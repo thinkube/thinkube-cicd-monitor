@@ -8,7 +8,6 @@ export interface Pipeline {
     trigger: PipelineTrigger;
     duration?: number;
     stageCount?: number;
-    mermaidGantt?: string;  // Backend-generated Mermaid Gantt chart
 }
 
 export enum PipelineStatus {
@@ -29,6 +28,7 @@ export interface PipelineStage {
     errorMessage?: string;
     details: any;
     duration?: number;
+    podName?: string;
 }
 
 export enum StageStatus {
@@ -39,38 +39,10 @@ export enum StageStatus {
     SKIPPED = 'SKIPPED'
 }
 
-
-
 export interface PipelineTrigger {
-    type: 'manual' | 'git_push' | 'scheduled' | 'api';
+    type: 'manual' | 'git_push' | 'scheduled' | 'api' | 'webhook';
     user?: string;
     branch?: string;
     commit?: string;
     message?: string;
-}
-
-export interface PipelineMetrics {
-    appName: string;
-    period: string;
-    totalPipelines: number;
-    successRate: number;
-    averageDuration: number;
-    failureReasons: { [key: string]: number };
-    deploymentFrequency: number;
-}
-
-export interface PipelineAnalysis {
-    pipelineId: string;
-    summary: string;
-    bottlenecks: AnalysisItem[];
-    failures: AnalysisItem[];
-    suggestions: string[];
-    performanceScore: number;
-}
-
-export interface AnalysisItem {
-    stage: string;
-    duration: number;
-    issue: string;
-    impact: 'high' | 'medium' | 'low';
 }
