@@ -122,7 +122,8 @@ export class PipelineTreeProvider extends EventEmitter implements vscode.TreeDat
                 duration,
                 pipeline.id,
                 stage.id,
-                stage.podName
+                stage.podName,
+                stage.details?.namespace
             );
         });
     }
@@ -206,7 +207,8 @@ export class StageItem extends vscode.TreeItem {
         public readonly duration: number,
         public readonly pipelineId: string,
         public readonly stageId: string,
-        public readonly podName?: string
+        public readonly podName?: string,
+        public readonly namespace?: string
     ) {
         super(stage, vscode.TreeItemCollapsibleState.None);
 

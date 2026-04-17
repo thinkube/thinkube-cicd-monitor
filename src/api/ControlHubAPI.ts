@@ -95,10 +95,14 @@ export class ControlHubAPI {
         }
     }
 
-    async getLogs(workflowName: string, podName: string, tailLines: number = 500): Promise<string> {
+    async getLogs(workflowName: string, podName: string, tailLines: number = 500, namespace?: string): Promise<string> {
         try {
+            const params: any = { tail_lines: tailLines };
+            if (namespace) {
+                params.namespace = namespace;
+            }
             const response = await this.client.get(`/pipelines/${workflowName}/logs/${podName}`, {
-                params: { tail_lines: tailLines }
+                params
             });
             return response.data.logs || '';
         } catch (error) {

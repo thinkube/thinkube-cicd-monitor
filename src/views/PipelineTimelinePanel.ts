@@ -48,7 +48,7 @@ export class PipelineTimelinePanel {
             async (message) => {
                 if (message.command === 'fetchLogs') {
                     try {
-                        const logs = await this._api.getLogs(this._pipeline.id, message.podName);
+                        const logs = await this._api.getLogs(this._pipeline.id, message.podName, 500, message.namespace);
                         this._panel.webview.postMessage({
                             command: 'showLogs',
                             stageId: message.stageId,
@@ -202,7 +202,7 @@ export class PipelineTimelinePanel {
                 </div>
                 <div>Component: ${stage.component} | Status: ${stage.status} | Duration: ${stage.duration !== null && stage.duration !== undefined && stage.duration >= 0 ? Math.round(stage.duration) + 's' : 'Running'}</div>
                 ${stage.errorMessage ? `<div style="color: var(--vscode-errorForeground);">Error: ${stage.errorMessage}</div>` : ''}
-                ${stage.podName ? `<button class="log-btn" id="btn-${stage.id}" onclick="fetchLogs('${stage.id}', '${stage.podName}')">View Logs</button>` : ''}
+                ${stage.podName ? `<button class="log-btn" id="btn-${stage.id}" onclick="fetchLogs('${stage.id}', '${stage.podName}', '${stage.details?.namespace || ''}')">View Logs</button>` : ''}
                 <div class="log-panel" id="logs-${stage.id}">
                     <pre id="logs-content-${stage.id}">Loading...</pre>
                 </div>
@@ -213,7 +213,7 @@ export class PipelineTimelinePanel {
     <script>
         const vscode = acquireVsCodeApi();
 
-        function fetchLogs(stageId, podName) {
+        function fetchLogs(stageId, podName, namespace) {
             const btn = document.getElementById('btn-' + stageId);
             const panel = document.getElementById('logs-' + stageId);
 
@@ -227,11 +227,13 @@ export class PipelineTimelinePanel {
             btn.textContent = 'Loading...';
             panel.classList.add('show');
 
-            vscode.postMessage({
+            const msg = {
                 command: 'fetchLogs',
                 stageId: stageId,
                 podName: podName
-            });
+            };
+            if (namespace) { msg.namespace = namespace; }
+            vscode.postMessage(msg);
         }
 
         function scrollToEvent(eventId) {

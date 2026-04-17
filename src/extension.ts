@@ -5,10 +5,25 @@ import { ControlHubAPI } from './api/ControlHubAPI';
 
 let controlHubAPI: ControlHubAPI;
 
+// Virtual document provider for read-only log views (close without save prompt)
+const LOG_SCHEME = 'thinkube-log';
+const logContents = new Map<string, string>();
+
+const logContentProvider: vscode.TextDocumentContentProvider = {
+    onDidChange: undefined,
+    provideTextDocumentContent(uri: vscode.Uri): string {
+        return logContents.get(uri.toString()) || '';
+    }
+};
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('Thinkube CI/CD Monitor is now active!');
 
     controlHubAPI = new ControlHubAPI();
+
+    context.subscriptions.push(
+        vscode.workspace.registerTextDocumentContentProvider(LOG_SCHEME, logContentProvider)
+    );
 
     const pipelineProvider = new PipelineTreeProvider(controlHubAPI);
 
@@ -60,11 +75,13 @@ export function activate(context: vscode.ExtensionContext) {
             let pipelineId: string | undefined;
             let podName: string | undefined;
             let stageName: string | undefined;
+            let namespace: string | undefined;
 
             if (arg instanceof StageItem) {
                 pipelineId = arg.pipelineId;
                 podName = arg.podName;
                 stageName = arg.stage;
+                namespace = arg.namespace;
             }
 
             if (!pipelineId || !podName) {
@@ -73,11 +90,10 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             try {
-                const logs = await controlHubAPI.getLogs(pipelineId, podName);
-                const doc = await vscode.workspace.openTextDocument({
-                    content: logs,
-                    language: 'log'
-                });
+                const logs = await controlHubAPI.getLogs(pipelineId, podName, 500, namespace);
+                const uri = vscode.Uri.parse(`${LOG_SCHEME}:${stageName || podName}.log`);
+                logContents.set(uri.toString(), logs);
+                const doc = await vscode.workspace.openTextDocument(uri);
                 await vscode.window.showTextDocument(doc, { preview: true });
             } catch (error: any) {
                 vscode.window.showErrorMessage(`Failed to fetch logs: ${error.message}`);
