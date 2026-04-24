@@ -139,8 +139,8 @@
             "failures",
             "none"
           ],
-          "default": "failures",
-          "description": "Level of notifications to show"
+          "default": "all",
+          "description": "Pipeline completion notifications: all (success + failure + cancelled), failures (only failures), none (disabled)"
         },
         "thinkube-cicd.apiToken": {
           "type": "string",

@@ -27,7 +27,18 @@ export function activate(context: vscode.ExtensionContext) {
 
     const pipelineProvider = new PipelineTreeProvider(controlHubAPI);
 
-    vscode.window.registerTreeDataProvider('thinkube-cicd.pipelines', pipelineProvider);
+    const treeView = vscode.window.createTreeView('thinkube-cicd.pipelines', {
+        treeDataProvider: pipelineProvider
+    });
+
+    treeView.onDidChangeVisibility(e => {
+        pipelineProvider.setVisible(e.visible);
+        if (e.visible) {
+            pipelineProvider.refresh();
+        }
+    });
+
+    context.subscriptions.push(treeView);
 
     // Refresh command
     context.subscriptions.push(
@@ -131,12 +142,10 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
-    // Auto-refresh on interval
+    // Auto-refresh on interval (runs regardless of visibility for notifications)
     const refreshInterval = vscode.workspace.getConfiguration('thinkube-cicd').get('refreshInterval', 5000);
     const refreshTimer = setInterval(() => {
-        if (pipelineProvider.isVisible()) {
-            pipelineProvider.refresh();
-        }
+        pipelineProvider.silentRefresh();
     }, refreshInterval);
 
     context.subscriptions.push({

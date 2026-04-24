@@ -9,6 +9,7 @@ export class PipelineTimelinePanel {
     private _disposables: vscode.Disposable[] = [];
     private _api: ControlHubAPI;
     private _pipeline: Pipeline;
+    private _refreshTimer: ReturnType<typeof setInterval> | undefined;
 
     public static render(extensionUri: vscode.Uri, pipeline: Pipeline, api: ControlHubAPI) {
         const column = vscode.window.activeTextEditor
@@ -19,6 +20,7 @@ export class PipelineTimelinePanel {
             PipelineTimelinePanel.currentPanel._panel.reveal(column);
             PipelineTimelinePanel.currentPanel._api = api;
             PipelineTimelinePanel.currentPanel._update(pipeline);
+            PipelineTimelinePanel.currentPanel._startAutoRefresh();
             return;
         }
 
@@ -43,7 +45,8 @@ export class PipelineTimelinePanel {
 
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
-        // Handle messages from the webview (log requests)
+        this._startAutoRefresh();
+
         this._panel.webview.onDidReceiveMessage(
             async (message) => {
                 if (message.command === 'fetchLogs') {
@@ -72,12 +75,38 @@ export class PipelineTimelinePanel {
 
     public dispose() {
         PipelineTimelinePanel.currentPanel = undefined;
+        this._stopAutoRefresh();
         this._panel.dispose();
         while (this._disposables.length) {
             const x = this._disposables.pop();
             if (x) {
                 x.dispose();
             }
+        }
+    }
+
+    private _startAutoRefresh() {
+        this._stopAutoRefresh();
+        this._refreshTimer = setInterval(async () => {
+            if (!this._pipeline) { return; }
+            try {
+                const updated = await this._api.getPipeline(this._pipeline.id);
+                if (updated) {
+                    this._update(updated);
+                    if (updated.status !== 'RUNNING' && updated.status !== 'PENDING') {
+                        this._stopAutoRefresh();
+                    }
+                }
+            } catch {
+                // Silently skip failed refresh
+            }
+        }, 5000);
+    }
+
+    private _stopAutoRefresh() {
+        if (this._refreshTimer) {
+            clearInterval(this._refreshTimer);
+            this._refreshTimer = undefined;
         }
     }
 

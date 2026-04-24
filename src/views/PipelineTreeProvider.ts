@@ -14,6 +14,7 @@ export class PipelineTreeProvider extends EventEmitter implements vscode.TreeDat
     private expandedPipelines = new Set<string>();
     private loading = true;
     private pipelineCache = new Map<string, Pipeline>();
+    private previousStatuses = new Map<string, PipelineStatus>();
 
     constructor(private controlHubAPI: ControlHubAPI) {
         super();
@@ -22,8 +23,11 @@ export class PipelineTreeProvider extends EventEmitter implements vscode.TreeDat
 
     refresh(): void {
         this.pipelineCache.clear();
-        this.loadPipelines();
-        this._onDidChangeTreeData.fire();
+        this.loadPipelines(true);
+    }
+
+    silentRefresh(): void {
+        this.loadPipelines(false);
     }
 
     isVisible(): boolean {
@@ -95,18 +99,55 @@ export class PipelineTreeProvider extends EventEmitter implements vscode.TreeDat
         return [];
     }
 
-    private async loadPipelines() {
-        this.loading = true;
-        this._onDidChangeTreeData.fire();
+    private async loadPipelines(showLoading: boolean) {
+        if (showLoading) {
+            this.loading = true;
+            this._onDidChangeTreeData.fire();
+        }
 
         try {
             this.pipelines = await this.controlHubAPI.listPipelines(undefined, undefined, 20);
+            this.notifyCompletedPipelines(this.pipelines);
         } catch (error) {
             console.error('Failed to load pipelines:', error);
-            this.pipelines = [];
         } finally {
             this.loading = false;
             this._onDidChangeTreeData.fire();
+        }
+    }
+
+    private notifyCompletedPipelines(pipelines: Pipeline[]) {
+        const config = vscode.workspace.getConfiguration('thinkube-cicd');
+        if (!config.get<boolean>('showNotifications', true)) { return; }
+        const level = config.get<string>('notificationLevel', 'failures');
+        if (level === 'none') { return; }
+
+        for (const pipeline of pipelines) {
+            const prev = this.previousStatuses.get(pipeline.id);
+            this.previousStatuses.set(pipeline.id, pipeline.status);
+
+            if (prev !== PipelineStatus.RUNNING && prev !== PipelineStatus.PENDING) { continue; }
+
+            const duration = pipeline.duration ? ` in ${Math.round(pipeline.duration)}s` : '';
+
+            if (pipeline.status === PipelineStatus.SUCCEEDED && level === 'all') {
+                vscode.window.showInformationMessage(
+                    `Pipeline "${pipeline.appName}" succeeded${duration}`
+                );
+            } else if (pipeline.status === PipelineStatus.FAILED) {
+                vscode.window.showErrorMessage(
+                    `Pipeline "${pipeline.appName}" failed${duration}`,
+                    'View Details'
+                ).then(selection => {
+                    if (selection === 'View Details') {
+                        vscode.commands.executeCommand('thinkube-cicd.showPipeline', pipeline.id);
+                    }
+                });
+            } else if (pipeline.status === PipelineStatus.CANCELLED && level === 'all') {
+                vscode.window.showWarningMessage(
+                    `Pipeline "${pipeline.appName}" was cancelled`
+                );
+            }
         }
     }
 
