@@ -57,7 +57,7 @@ All commands are in the category *Thinkube CI/CD*.
 
 | Setting | Type | Meaning |
 |---|---|---|
-| `thinkube-cicd.apiUrl` | string | Address of thinkube-control. The platform sets it to `https://control.<domain>`. |
+| `thinkube-cicd.apiUrl` | string | Address of thinkube-control. Required, with no default: when it is empty the extension shows an error and makes no requests. The platform sets it to `https://control.<domain>`. |
 | `thinkube-cicd.apiToken` | string | thinkube-control API token. Only a value starting with `tk_` is sent. |
 | `thinkube-cicd.refreshInterval` | number | How often, in milliseconds, the pipeline list is read. Default 5000. Read when the extension starts. |
 | `thinkube-cicd.showNotifications` | boolean | Show notifications when a pipeline finishes. Default `true`. |

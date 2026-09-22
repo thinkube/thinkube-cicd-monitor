@@ -7,16 +7,15 @@ import axios, { AxiosInstance } from 'axios';
 import * as vscode from 'vscode';
 import { Pipeline, PipelineStage } from '../models/Pipeline';
 
+const API_URL_MISSING = 'thinkube-cicd.apiUrl is not set. Thinkube sets it in code-server; set it in Settings to your thinkube-control address.';
+
 export class ControlHubAPI {
     private client: AxiosInstance;
-    private baseURL: string;
+    private baseURL = '';
+    private missingUrlReported = false;
 
     constructor() {
-        const config = vscode.workspace.getConfiguration('thinkube-cicd');
-        this.baseURL = config.get('apiUrl', 'https://control.thinkube.com');
-
         this.client = axios.create({
-            baseURL: `${this.baseURL}/api/v1/cicd`,
             timeout: 30000,
             headers: {
                 'Content-Type': 'application/json'
@@ -24,6 +23,35 @@ export class ControlHubAPI {
         });
 
         this.setupAuthInterceptor();
+        this.isConfigured();
+    }
+
+    /**
+     * Reads thinkube-cicd.apiUrl and points the HTTP client at it.
+     * Returns false when the setting is empty; the error message is shown
+     * once until the setting is filled in.
+     */
+    public isConfigured(): boolean {
+        const apiUrl = (vscode.workspace.getConfiguration('thinkube-cicd').get<string>('apiUrl') ?? '').trim();
+        if (!apiUrl) {
+            if (!this.missingUrlReported) {
+                this.missingUrlReported = true;
+                vscode.window.showErrorMessage(API_URL_MISSING);
+            }
+            return false;
+        }
+        this.missingUrlReported = false;
+        if (apiUrl !== this.baseURL) {
+            this.baseURL = apiUrl;
+            this.client.defaults.baseURL = `${this.baseURL}/api/v1/cicd`;
+        }
+        return true;
+    }
+
+    private requireConfigured(): void {
+        if (!this.isConfigured()) {
+            throw new Error(API_URL_MISSING);
+        }
     }
 
     private setupAuthInterceptor() {
@@ -53,17 +81,10 @@ export class ControlHubAPI {
         return null;
     }
 
-    public refreshConfig(): void {
-        const config = vscode.workspace.getConfiguration('thinkube-cicd');
-        const newBaseURL = config.get('apiUrl', 'https://control.thinkube.com');
-
-        if (newBaseURL !== this.baseURL) {
-            this.baseURL = newBaseURL;
-            this.client.defaults.baseURL = `${this.baseURL}/api/v1/cicd`;
-        }
-    }
-
     async listPipelines(appName?: string, status?: string, limit: number = 20): Promise<Pipeline[]> {
+        if (!this.isConfigured()) {
+            return [];
+        }
         try {
             const response = await this.client.get('/pipelines', {
                 params: { app_name: appName, status, limit },
@@ -83,6 +104,7 @@ export class ControlHubAPI {
     }
 
     async getPipeline(pipelineId: string): Promise<Pipeline | null> {
+        this.requireConfigured();
         try {
             const response = await this.client.get(`/pipelines/${pipelineId}`);
             return this.mapPipeline(response.data);
@@ -101,6 +123,7 @@ export class ControlHubAPI {
     }
 
     async getLogs(workflowName: string, podName: string, tailLines: number = 500, namespace?: string): Promise<string> {
+        this.requireConfigured();
         try {
             const params: any = { tail_lines: tailLines };
             if (namespace) {
@@ -120,6 +143,7 @@ export class ControlHubAPI {
     }
 
     async testConnection(): Promise<boolean> {
+        this.requireConfigured();
         try {
             const response = await this.client.get('/health');
             return response.data.status === 'healthy';

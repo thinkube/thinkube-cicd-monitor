@@ -157,7 +157,10 @@ export function activate(context: vscode.ExtensionContext) {
         dispose: () => clearInterval(refreshTimer)
     });
 
-    // Check API connection
+    // Check API connection; an empty apiUrl was already reported by ControlHubAPI
+    if (!controlHubAPI.isConfigured()) {
+        return;
+    }
     controlHubAPI.testConnection().then(connected => {
         if (connected) {
             const config = vscode.workspace.getConfiguration('thinkube-cicd');

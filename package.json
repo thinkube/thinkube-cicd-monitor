@@ -114,8 +114,7 @@
       "properties": {
         "thinkube-cicd.apiUrl": {
           "type": "string",
-          "default": "https://control.thinkube.com",
-          "description": "Thinkube Control Hub API URL"
+          "description": "Address of thinkube-control, for example https://control.example.com. Required. Thinkube sets it in code-server."
         },
         "thinkube-cicd.defaultApp": {
           "type": "string",
@@ -145,7 +144,7 @@
         "thinkube-cicd.apiToken": {
           "type": "string",
           "default": "",
-          "description": "API token for authentication (optional). Get from https://control.thinkube.com/#/tokens"
+          "description": "API token for authentication (optional). Get it from the Tokens page of thinkube-control"
         }
       }
     }
