@@ -21,7 +21,7 @@
   "icon": "icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cmxela/thinkube-cicd-monitor"
+    "url": "https://github.com/thinkube/thinkube-cicd-monitor"
   },
   "activationEvents": [
     "onStartupFinished"
