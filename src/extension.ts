@@ -1,3 +1,8 @@
+/*
+ * Copyright Alejandro Martínez Corriá and the Thinkube contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import * as vscode from 'vscode';
 import { PipelineTreeProvider, StageItem } from './views/PipelineTreeProvider';
 import { PipelineTimelinePanel } from './views/PipelineTimelinePanel';

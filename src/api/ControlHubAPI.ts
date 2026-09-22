@@ -1,3 +1,8 @@
+/*
+ * Copyright Alejandro Martínez Corriá and the Thinkube contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import axios, { AxiosInstance } from 'axios';
 import * as vscode from 'vscode';
 import { Pipeline, PipelineStage } from '../models/Pipeline';

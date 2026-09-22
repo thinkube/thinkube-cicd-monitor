@@ -1,3 +1,8 @@
+/*
+ * Copyright Alejandro Martínez Corriá and the Thinkube contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import * as vscode from 'vscode';
 import { EventEmitter } from 'events';
 import { Pipeline, PipelineStatus, PipelineStage, StageStatus } from '../models/Pipeline';
