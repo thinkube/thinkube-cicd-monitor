@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.vsix
+.vscode-test/
+*.log
+.DS_Store
+
+# Local Claude Code and Tandem state
+.claude/
+.tandem/
