@@ -123,8 +123,9 @@
         },
         "thinkube-cicd.refreshInterval": {
           "type": "number",
-          "default": 5000,
-          "description": "Refresh interval in milliseconds"
+          "default": 30000,
+          "minimum": 10000,
+          "description": "Refresh interval in milliseconds (at least 10000: every open window polls Thinkube Control)"
         },
         "thinkube-cicd.showNotifications": {
           "type": "boolean",
