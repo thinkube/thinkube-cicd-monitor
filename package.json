@@ -2,7 +2,7 @@
   "name": "thinkube-cicd-monitor",
   "displayName": "Thinkube CI/CD Monitor",
   "description": "Real-time CI/CD pipeline monitoring for Thinkube - Track builds, deployments, and pipeline events directly in VS Code",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "thinkube",
   "engines": {
     "vscode": "^1.100.0"
