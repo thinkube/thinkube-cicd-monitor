@@ -31,7 +31,14 @@ export class PipelineTreeProvider extends EventEmitter implements vscode.TreeDat
         this.loadPipelines(true);
     }
 
+    // A refresh is skipped while the previous one is still waiting for
+    // Thinkube Control, so a slow answer never piles requests up.
+    private inFlight = false;
+
     silentRefresh(): void {
+        if (this.inFlight) {
+            return;
+        }
         this.loadPipelines(false);
     }
 
@@ -105,6 +112,7 @@ export class PipelineTreeProvider extends EventEmitter implements vscode.TreeDat
     }
 
     private async loadPipelines(showLoading: boolean) {
+        this.inFlight = true;
         if (showLoading) {
             this.loading = true;
             this._onDidChangeTreeData.fire();
@@ -117,6 +125,7 @@ export class PipelineTreeProvider extends EventEmitter implements vscode.TreeDat
             console.error('Failed to load pipelines:', error);
         } finally {
             this.loading = false;
+            this.inFlight = false;
             this._onDidChangeTreeData.fire();
         }
     }

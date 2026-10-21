@@ -148,7 +148,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // Auto-refresh on interval (runs regardless of visibility for notifications)
-    const refreshInterval = vscode.workspace.getConfiguration('thinkube-cicd').get('refreshInterval', 5000);
+    const refreshInterval = vscode.workspace.getConfiguration('thinkube-cicd').get('refreshInterval', 30000);
     const refreshTimer = setInterval(() => {
         pipelineProvider.silentRefresh();
     }, refreshInterval);
