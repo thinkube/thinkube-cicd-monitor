@@ -116,11 +116,6 @@
           "type": "string",
           "description": "Address of thinkube-control, for example https://control.example.com. Required. Thinkube sets it in code-server."
         },
-        "thinkube-cicd.defaultApp": {
-          "type": "string",
-          "default": "",
-          "description": "Default application to monitor"
-        },
         "thinkube-cicd.refreshInterval": {
           "type": "number",
           "default": 30000,

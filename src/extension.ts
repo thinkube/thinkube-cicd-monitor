@@ -52,37 +52,30 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
-    // Show pipeline details (timeline panel)
+    // Show pipeline details (timeline panel). The tree's menus pass the row,
+    // other callers the pipeline id; showTimeline is the same command.
+    const showPipeline = async (arg: any) => {
+        let pipelineId: string | undefined;
+
+        if (arg && arg.pipeline && arg.pipeline.id) {
+            pipelineId = arg.pipeline.id;
+        } else if (typeof arg === 'string') {
+            pipelineId = arg;
+        }
+
+        if (!pipelineId) {
+            vscode.window.showErrorMessage('Pipeline ID not provided');
+            return;
+        }
+
+        const pipeline = await controlHubAPI.getPipeline(pipelineId);
+        if (pipeline) {
+            PipelineTimelinePanel.render(context.extensionUri, pipeline, controlHubAPI);
+        }
+    };
     context.subscriptions.push(
-        vscode.commands.registerCommand('thinkube-cicd.showPipeline', async (arg: any) => {
-            let pipelineId: string | undefined;
-
-            if (arg && arg.pipeline && arg.pipeline.id) {
-                pipelineId = arg.pipeline.id;
-            } else if (typeof arg === 'string') {
-                pipelineId = arg;
-            }
-
-            if (!pipelineId) {
-                vscode.window.showErrorMessage('Pipeline ID not provided');
-                return;
-            }
-
-            const pipeline = await controlHubAPI.getPipeline(pipelineId);
-            if (pipeline) {
-                PipelineTimelinePanel.render(context.extensionUri, pipeline, controlHubAPI);
-            }
-        })
-    );
-
-    // Show timeline (same as showPipeline)
-    context.subscriptions.push(
-        vscode.commands.registerCommand('thinkube-cicd.showTimeline', async (pipelineId: string) => {
-            const pipeline = await controlHubAPI.getPipeline(pipelineId);
-            if (pipeline) {
-                PipelineTimelinePanel.render(context.extensionUri, pipeline, controlHubAPI);
-            }
-        })
+        vscode.commands.registerCommand('thinkube-cicd.showPipeline', showPipeline),
+        vscode.commands.registerCommand('thinkube-cicd.showTimeline', showPipeline)
     );
 
     // View logs for a stage

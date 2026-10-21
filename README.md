@@ -62,7 +62,6 @@ All commands are in the category *Thinkube CI/CD*.
 | `thinkube-cicd.refreshInterval` | number | How often, in milliseconds, the pipeline list is read. Default 5000. Read when the extension starts. |
 | `thinkube-cicd.showNotifications` | boolean | Show notifications when a pipeline finishes. Default `true`. |
 | `thinkube-cicd.notificationLevel` | `all`, `failures`, `none` | `all`: success, failure and cancel. `failures`: failures only. `none`: no notifications. |
-| `thinkube-cicd.defaultApp` | string | Declared in `package.json`. The source does not read it. |
 
 The Thinkube Notebook View extension uses `thinkube-cicd.apiUrl` and
 `thinkube-cicd.apiToken` when its own settings are empty.
