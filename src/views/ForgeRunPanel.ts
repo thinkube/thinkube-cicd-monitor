@@ -277,7 +277,7 @@ function draw() {
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const all = loss.concat(evalLoss);
   const lastStep = Math.max(...all.map(p => p.step));
-  const xMax = Math.max(lastStep, state.totalSteps || 0, 1);
+  const xMax = Math.max(lastStep, 1);
   let yMin = Math.min(...all.map(p => p.value)), yMax = Math.max(...all.map(p => p.value));
   const pad = (yMax - yMin) * 0.05 || Math.abs(yMax) * 0.05 || 1;
   yMin = yMin >= 0 ? Math.max(0, yMin - pad) : yMin - pad; yMax += pad;
@@ -286,16 +286,15 @@ function draw() {
   const x = s => m.l + (s / xMax) * iw;
   const y = v => m.t + ih - ((v - yMin) / (yMax - yMin)) * ih;
 
+  // A tick label has the decimals its spacing needs, no more
+  const decimals = yt.length > 1 ? Math.max(0, -Math.floor(Math.log10(yt[1] - yt[0]) + 1e-9)) : 2;
   for (const t of yt) {
     el('line', { x1: m.l, x2: m.l + iw, y1: y(t), y2: y(t), stroke: 'var(--grid)', 'stroke-width': 1 }, svg);
-    const label = el('text', { x: m.l - 8, y: y(t) + 4, 'text-anchor': 'end' }, svg); label.textContent = fmtNum(t);
+    const label = el('text', { x: m.l - 8, y: y(t) + 4, 'text-anchor': 'end' }, svg); label.textContent = t.toFixed(decimals);
   }
   for (const t of niceTicks(0, xMax, Math.max(2, Math.floor(iw / 90)))) {
     if (t > xMax) continue;
     const label = el('text', { x: x(t), y: H - 8, 'text-anchor': 'middle' }, svg); label.textContent = fmtStep(t);
-  }
-  if (state.totalSteps && lastStep < state.totalSteps) {
-    el('line', { x1: x(lastStep), x2: x(lastStep), y1: m.t, y2: m.t + ih, stroke: 'var(--grid)', 'stroke-dasharray': '3 3' }, svg);
   }
   const path = (points, attrs) => {
     if (!points.length) return;
@@ -356,7 +355,7 @@ function draw() {
   const lastLoss = loss[loss.length - 1];
   $('chart-note').textContent = loss.length
     ? 'Logged ' + loss.length + ' steps; last at step ' + lastLoss.step + ', loss ' + fmtNum(lastLoss.value) +
-      (state.totalSteps ? '. The axis runs to the last step of the run, ' + state.totalSteps + '.' : '.')
+      (state.totalSteps ? ', of ' + state.totalSteps + ' steps in the run.' : '.')
     : '';
 }
 
