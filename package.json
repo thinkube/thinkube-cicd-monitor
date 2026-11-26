@@ -2,7 +2,7 @@
   "name": "thinkube-cicd-monitor",
   "displayName": "Thinkube CI/CD Monitor",
   "description": "Thinkube CI/CD pipelines, Mill runs and Forge runs, with their logs and training loss, directly in VS Code",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "publisher": "thinkube",
   "engines": {
     "vscode": "^1.100.0"
