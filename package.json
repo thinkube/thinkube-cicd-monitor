@@ -1,7 +1,7 @@
 {
   "name": "thinkube-cicd-monitor",
   "displayName": "Thinkube CI/CD Monitor",
-  "description": "Real-time CI/CD pipeline monitoring for Thinkube - Track builds, deployments, and pipeline events directly in VS Code",
+  "description": "Thinkube CI/CD pipelines, Mill runs and Forge runs, with their logs and training loss, directly in VS Code",
   "version": "0.1.3",
   "publisher": "thinkube",
   "engines": {
@@ -44,6 +44,18 @@
           "name": "Pipelines",
           "icon": "media/tk_devops.svg",
           "contextualTitle": "CI/CD Pipelines"
+        },
+        {
+          "id": "thinkube-cicd.millRuns",
+          "name": "Mill Runs",
+          "icon": "media/tk_devops.svg",
+          "contextualTitle": "Mill Runs"
+        },
+        {
+          "id": "thinkube-cicd.forgeRuns",
+          "name": "Forge Runs",
+          "icon": "media/tk_devops.svg",
+          "contextualTitle": "Forge Runs"
         }
       ]
     },
@@ -81,6 +93,42 @@
         "title": "Configure API Token",
         "category": "Thinkube CI/CD",
         "icon": "$(key)"
+      },
+      {
+        "command": "thinkube-cicd.refreshMillRuns",
+        "title": "Refresh Mill Runs",
+        "category": "Thinkube CI/CD",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "thinkube-cicd.viewMillRunLog",
+        "title": "View Run Log",
+        "category": "Thinkube CI/CD",
+        "icon": "$(output)"
+      },
+      {
+        "command": "thinkube-cicd.openMillRun",
+        "title": "Open in Thinkube Control",
+        "category": "Thinkube CI/CD",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "thinkube-cicd.refreshForgeRuns",
+        "title": "Refresh Forge Runs",
+        "category": "Thinkube CI/CD",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "thinkube-cicd.showForgeRun",
+        "title": "Show Forge Run",
+        "category": "Thinkube CI/CD",
+        "icon": "$(graph-line)"
+      },
+      {
+        "command": "thinkube-cicd.openForgeRun",
+        "title": "Open in Thinkube Control",
+        "category": "Thinkube CI/CD",
+        "icon": "$(link-external)"
       }
     ],
     "menus": {
@@ -88,6 +136,16 @@
         {
           "command": "thinkube-cicd.refreshPipelines",
           "when": "view == thinkube-cicd.pipelines",
+          "group": "navigation"
+        },
+        {
+          "command": "thinkube-cicd.refreshMillRuns",
+          "when": "view == thinkube-cicd.millRuns",
+          "group": "navigation"
+        },
+        {
+          "command": "thinkube-cicd.refreshForgeRuns",
+          "when": "view == thinkube-cicd.forgeRuns",
           "group": "navigation"
         }
       ],
@@ -106,6 +164,44 @@
           "command": "thinkube-cicd.viewLogs",
           "when": "view == thinkube-cicd.pipelines && viewItem == stage",
           "group": "inline"
+        },
+        {
+          "command": "thinkube-cicd.viewMillRunLog",
+          "when": "view == thinkube-cicd.millRuns && viewItem == millRun",
+          "group": "inline"
+        },
+        {
+          "command": "thinkube-cicd.openMillRun",
+          "when": "view == thinkube-cicd.millRuns && viewItem == millRun",
+          "group": "inline"
+        },
+        {
+          "command": "thinkube-cicd.showForgeRun",
+          "when": "view == thinkube-cicd.forgeRuns && viewItem == forgeRun",
+          "group": "inline"
+        },
+        {
+          "command": "thinkube-cicd.openForgeRun",
+          "when": "view == thinkube-cicd.forgeRuns && viewItem == forgeRun",
+          "group": "inline"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "thinkube-cicd.viewMillRunLog",
+          "when": "false"
+        },
+        {
+          "command": "thinkube-cicd.openMillRun",
+          "when": "false"
+        },
+        {
+          "command": "thinkube-cicd.showForgeRun",
+          "when": "false"
+        },
+        {
+          "command": "thinkube-cicd.openForgeRun",
+          "when": "false"
         }
       ]
     },

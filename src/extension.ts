@@ -7,6 +7,9 @@ import * as vscode from 'vscode';
 import { PipelineTreeProvider, StageItem } from './views/PipelineTreeProvider';
 import { PipelineTimelinePanel } from './views/PipelineTimelinePanel';
 import { ControlHubAPI } from './api/ControlHubAPI';
+import { ServicesAPI } from './api/ServicesAPI';
+import { ForgeRunItem, ForgeRunsProvider, MillRunItem, MillRunsProvider } from './views/RunsTreeProviders';
+import { ForgeRunPanel } from './views/ForgeRunPanel';
 
 let controlHubAPI: ControlHubAPI;
 
@@ -140,10 +143,64 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
+    // Mill runs and Forge runs: read while their view is visible
+    const services = new ServicesAPI();
+    const millProvider = new MillRunsProvider(services);
+    const forgeProvider = new ForgeRunsProvider(services);
+    const millView = vscode.window.createTreeView('thinkube-cicd.millRuns', { treeDataProvider: millProvider });
+    const forgeView = vscode.window.createTreeView('thinkube-cicd.forgeRuns', { treeDataProvider: forgeProvider });
+    millView.onDidChangeVisibility(e => millProvider.setVisible(e.visible));
+    forgeView.onDidChangeVisibility(e => forgeProvider.setVisible(e.visible));
+    millProvider.setVisible(millView.visible);
+    forgeProvider.setVisible(forgeView.visible);
+
+    const openExternal = (url: string) => vscode.env.openExternal(vscode.Uri.parse(url));
+    const failed = (what: string) => (error: any) =>
+        vscode.window.showErrorMessage(`${what} failed: ${error?.message ?? error}`);
+
+    context.subscriptions.push(
+        millView,
+        forgeView,
+        vscode.commands.registerCommand('thinkube-cicd.refreshMillRuns', () => millProvider.refresh()),
+        vscode.commands.registerCommand('thinkube-cicd.refreshForgeRuns', () => forgeProvider.refresh()),
+        // The row passes itself; the Forge run panel passes the id of a task's run of Mill
+        vscode.commands.registerCommand('thinkube-cicd.viewMillRunLog', async (arg: MillRunItem | string) => {
+            const runId = typeof arg === 'string' ? arg : arg.run.id;
+            try {
+                const log = await services.millRunLog(runId, 500);
+                const uri = vscode.Uri.parse(`${LOG_SCHEME}:${runId}.log`);
+                logContents.set(uri.toString(), log || '(the run printed nothing)');
+                const doc = await vscode.workspace.openTextDocument(uri);
+                await vscode.window.showTextDocument(doc, { preview: true });
+            } catch (error) {
+                failed(`Reading the log of ${runId}`)(error);
+            }
+        }),
+        vscode.commands.registerCommand('thinkube-cicd.openMillRun', (item: MillRunItem) => {
+            try {
+                openExternal(services.pageUrl('mill', item.run.id));
+            } catch (error) {
+                failed('Opening the Mill run')(error);
+            }
+        }),
+        vscode.commands.registerCommand('thinkube-cicd.showForgeRun', (item: ForgeRunItem) => {
+            ForgeRunPanel.show(services, item.run.id, item.run.name);
+        }),
+        vscode.commands.registerCommand('thinkube-cicd.openForgeRun', (item: ForgeRunItem) => {
+            try {
+                openExternal(services.pageUrl('forge', item.run.id));
+            } catch (error) {
+                failed('Opening the Forge run')(error);
+            }
+        })
+    );
+
     // Auto-refresh on interval (runs regardless of visibility for notifications)
     const refreshInterval = vscode.workspace.getConfiguration('thinkube-cicd').get('refreshInterval', 30000);
     const refreshTimer = setInterval(() => {
         pipelineProvider.silentRefresh();
+        millProvider.tick();
+        forgeProvider.tick();
     }, refreshInterval);
 
     context.subscriptions.push({
